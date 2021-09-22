@@ -8,7 +8,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os, json
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,7 +21,8 @@ SECRET_KEY = 'django-insecure-fsg^2bv0!8_hjn(z(@-jcdbfhh78f_8o_om*+(uz%p-6$@)in=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1',
+                 'localhost']
 
 # Application definition
 
@@ -37,6 +38,8 @@ INSTALLED_APPS = [
     'users',
     'baskets',
     'admins',
+
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +49,9 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
+
 ]
 
 ROOT_URLCONF = 'myShop.urls'
@@ -62,6 +67,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -129,3 +137,53 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
 LOGIN_URL = '/users/login/'
+
+DOMAIN_NAME = 'http://localhost:8000'
+
+EMAIL_HOST = 'smtp.mailtrap.io'
+EMAIL_HOST_USER = 'b942e26423584d'
+EMAIL_HOST_PASSWORD = '357d0abb156854'
+EMAIL_PORT = '2525'
+#EMAIL_USE_TLS = True
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.github.GithubOAuth2',
+    'social_core.backends.twitter.TwitterOAuth',
+    'social_core.backends.facebook.FacebookOAuth2',
+
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+
+with open('myShop/github.json', 'r') as f:
+    GitHub = json.load(f)
+
+SOCIAL_AUTH_GITHUB_KEY = GitHub["GITHUB_APP_ID"]
+SOCIAL_AUTH_GITHUB_SECRET = GitHub["GITHUB_API_SECRET"]
+#GOOGLE_APP_ID = '85139069744-un1lbg7e6b49m6k22h7u3ie1et4d101n.apps.googleusercontent.com'
+#GOOGLE_API_SECRET = 'wmZTQLeMUMcSRIhaDOY6xgQa'
+
+
+
+SOCIAL_AUTH_GITHUB_IGNORE_DEFAULT_SCOPE = True
+SOCIAL_AUTH_GITHUB_SCOPE = ['email']
+
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+LOGIN_REDIRECT_URL = 'index'
+LOGIN_ERROR_URL = '/'
+
+SOCIAL_AUTH_CREATE_USERS = True
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+    'users.pipeline.save_user_profile',
+)
