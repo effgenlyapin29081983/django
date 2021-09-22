@@ -11,6 +11,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from users.models import User
 
+from django.db import transaction
+from users.forms import UserProfileEditForm
 
 def login(request):
     if request.method == 'POST':
@@ -48,19 +50,22 @@ def registration(request):
     return render(request, 'users/registration.html', context)
 
 
-@login_required
+@transaction.atomic
 def profile(request):
     user = request.user
     if request.method == 'POST':
         form = UserProfileForm(instance=user, files=request.FILES, data=request.POST)
-        if form.is_valid():
+        profile_form = UserProfileEditForm(data=request.POST, instance=request.user.userprofile)
+        if form.is_valid() and profile_form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('users:profile'))
     else:
         form = UserProfileForm(instance=user)
+        profile_form = UserProfileEditForm(instance=request.user.userprofile)
     context = {
         'title': 'myShop - Личный кабинет',
         'form': form,
+        'profile_form': profile_form,
         'baskets': Basket.objects.filter(user=user),
     }
     return render(request, 'users/profile.html', context)
@@ -88,6 +93,7 @@ def verify(request, email, activation_key):
         if user.activation_key == activation_key and not user.is_activation_key_expired():
             user.is_active = True
             user.save()
+            #auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             auth.login(request, user)
             return render(request, 'users/verification.html')
         else:
@@ -96,3 +102,30 @@ def verify(request, email, activation_key):
     except Exception as e:
         print(f'error activation user : {e.args}')
         return HttpResponseRedirect(reverse('main'))
+
+
+@transaction.atomic
+def edit(request):
+    title = 'редактирование'
+
+    if request.method == 'POST':
+        edit_form = UserProfileForm(request.POST, request.FILES, \
+                                     instance=request.user)
+        profile_form = UserProfileEditForm(request.POST, \
+                                               instance=request.user.shopuserprofile)
+        if edit_form.is_valid() and profile_form.is_valid():
+            edit_form.save()
+            return HttpResponseRedirect(reverse('auth:edit'))
+    else:
+        edit_form = UserProfileForm(instance=request.user)
+        profile_form = UserProfileEditForm(
+            instance=request.user.shopuserprofile
+        )
+
+    content = {
+        'title': title,
+        'edit_form': edit_form,
+        'profile_form': profile_form
+    }
+
+    return render(request, 'users/edit.html', content)
