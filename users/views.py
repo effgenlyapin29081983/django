@@ -112,14 +112,14 @@ def edit(request):
         edit_form = UserProfileForm(request.POST, request.FILES, \
                                      instance=request.user)
         profile_form = UserProfileEditForm(request.POST, \
-                                               instance=request.user.shopuserprofile)
+                                               instance=request.user.userprofile)
         if edit_form.is_valid() and profile_form.is_valid():
             edit_form.save()
-            return HttpResponseRedirect(reverse('auth:edit'))
+            return HttpResponseRedirect(reverse('users:edit'))
     else:
         edit_form = UserProfileForm(instance=request.user)
         profile_form = UserProfileEditForm(
-            instance=request.user.shopuserprofile
+            instance=request.user.userprofile
         )
 
     content = {
