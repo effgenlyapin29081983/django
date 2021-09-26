@@ -33,11 +33,17 @@
                     </a>
                 </li>
                 {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:profile' %}">{{ user.username }}
-                            <i class="fas fa-user-circle"></i>
-                        </a>
-                    </li>
+                    <ul class="navbar-nav ml-auto ml-md-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" id="userDropdown" href="#" role="button" data-toggle="dropdown">
+                                {{ user.username|default:'Пользователь' }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'users:edit' %}">Профиль</a></li>
+                                <li><a class="dropdown-item" href="{% url 'ordersapp:order_list' %}">Заказы</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                     {% if user.is_staff %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'admins:index' %}">
